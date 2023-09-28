@@ -24,11 +24,16 @@ Ethereal Engine. All Rights Reserved.
 */
 
 import React, { useEffect, useState } from 'react'
+import { Mesh } from 'three'
 
+import { EditorControlFunctions } from '@etherealengine/editor/src/functions/EditorControlFunctions'
+import { AssetLoader } from '@etherealengine/engine/src/assets/classes/AssetLoader'
 import { AudioEffectPlayer } from '@etherealengine/engine/src/audio/systems/MediaSystem'
 import { changeAvatarAnimationState } from '@etherealengine/engine/src/avatar/animation/AvatarAnimationGraph'
 import { AvatarStates } from '@etherealengine/engine/src/avatar/animation/Util'
+import { AvatarComponent } from '@etherealengine/engine/src/avatar/components/AvatarComponent'
 import { Engine } from '@etherealengine/engine/src/ecs/classes/Engine'
+import { getComponent } from '@etherealengine/engine/src/ecs/functions/ComponentFunctions'
 import Button from '@etherealengine/ui/src/primitives/mui/Button'
 import Icon from '@etherealengine/ui/src/primitives/mui/Icon'
 
@@ -53,17 +58,38 @@ export const useEmoteMenuHooks = () => {
   let menuItemRadius = menuItemWidth / 2
   let effectiveRadius = menuRadius - menuItemRadius - menuPadding / 2
 
+  //Facial expression code starts
+  const changeTexture = async (texture: string) => {
+    const entity = Engine.instance.localClientEntity
+    const avatar = getComponent(entity, AvatarComponent)
+    const hier = avatar.model?.children[0].children[0].children[0].children.find((child) => child.name === 'head')
+    if (hier !== undefined) {
+      const id = hier?.uuid
+      const mesh = hier as Mesh
+      const preMap = mesh.material.map
+      const prop = await AssetLoader.loadAsync(texture)
+      EditorControlFunctions.modifyMaterial([id], mesh.material.uuid, [{ ['map']: prop }])
+    }
+  }
+  //Facial expression code ends
+
   let [items, setItems] = useState([
     {
       body: <img src="/static/Wave.svg" alt="Wave" />,
       containerProps: {
-        onClick: () => runAnimation(AvatarStates.WAVE)
+        onClick: () => {
+          changeTexture(`${process.env.VITE_FILE_SERVER}/projects/default-project/assets/SGT_diffse_kirakira_2.png`)
+          runAnimation(AvatarStates.WAVE)
+        }
       }
     },
     {
       body: <img src="/static/clap1.svg" alt="Clap" />,
       containerProps: {
-        onClick: () => runAnimation(AvatarStates.CLAP)
+        onClick: () => {
+          changeTexture(`${process.env.VITE_FILE_SERVER}/projects/default-project/assets/SGT_diffse_yorokobi_2.png`)
+          runAnimation(AvatarStates.CLAP)
+        }
       }
     },
     {
@@ -84,12 +110,12 @@ export const useEmoteMenuHooks = () => {
         onClick: () => runAnimation(AvatarStates.DANCE3)
       }
     },
-    {
-      body: <img src="/static/Dance4.svg" alt="Dance 4" />,
-      containerProps: {
-        onClick: () => runAnimation(AvatarStates.DANCE4)
-      }
-    },
+    // {
+    //   body: <img src="/static/Dance4.svg" alt="Dance 4" />,
+    //   containerProps: {
+    //     onClick: () => runAnimation(AvatarStates.DANCE4)
+    //   }
+    // },
     {
       body: <img src="/static/Kiss.svg" alt="Kiss" />,
       containerProps: {
@@ -99,13 +125,19 @@ export const useEmoteMenuHooks = () => {
     {
       body: <img src="/static/Cry.svg" alt="Cry" />,
       containerProps: {
-        onClick: () => runAnimation(AvatarStates.CRY)
+        onClick: () => {
+          changeTexture(`${process.env.VITE_FILE_SERVER}/projects/default-project/assets/SGT_diffse_naki_2.png`)
+          runAnimation(AvatarStates.CRY)
+        }
       }
     },
     {
       body: <img src="/static/Laugh.svg" alt="Laugh" />,
       containerProps: {
-        onClick: () => runAnimation(AvatarStates.LAUGH)
+        onClick: () => {
+          changeTexture(`${process.env.VITE_FILE_SERVER}/projects/default-project/assets/SGT_diffse_mewotumuru_2.png`)
+          runAnimation(AvatarStates.LAUGH)
+        }
       }
     },
     {

@@ -36,6 +36,7 @@ import { DiscordIcon } from '@etherealengine/client-core/src/common/components/I
 import { FacebookIcon } from '@etherealengine/client-core/src/common/components/Icons/FacebookIcon'
 import { GithubIcon } from '@etherealengine/client-core/src/common/components/Icons/GithubIcon'
 import { GoogleIcon } from '@etherealengine/client-core/src/common/components/Icons/GoogleIcon'
+// import { KeycloakIcon } from '@etherealengine/client-core/src/common/components/Icons/KeycloakIcon'
 import { LinkedInIcon } from '@etherealengine/client-core/src/common/components/Icons/LinkedInIcon'
 import { TwitterIcon } from '@etherealengine/client-core/src/common/components/Icons/TwitterIcon'
 import InputText from '@etherealengine/client-core/src/common/components/InputText'
@@ -51,6 +52,7 @@ import CircularProgress from '@etherealengine/ui/src/primitives/mui/CircularProg
 import Icon from '@etherealengine/ui/src/primitives/mui/Icon'
 import IconButton from '@etherealengine/ui/src/primitives/mui/IconButton'
 
+import KeycloakIcon from '../../../../../../../pdl_icon.png'
 import { AuthSettingsState } from '../../../../admin/services/Setting/AuthSettingService'
 import { initialAuthState, initialOAuthConnectedState } from '../../../../common/initialAuthState'
 import { NotificationService } from '../../../../common/services/NotificationService'
@@ -162,6 +164,9 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
           case 'github':
             oauthConnectedState.merge({ github: true })
             break
+          case 'keycloak':
+            oauthConnectedState.merge({ keycloak: true })
+            break
         }
       }
   }, [selfUser.identityProviders])
@@ -181,8 +186,9 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
     const name = username.value.trim()
     if (!name) return
     if (selfUser.name.value.trim() !== name) {
-      // @ts-ignore
       AuthService.updateUsername(userId, name)
+      // PopupMenuServices.showPopupMenu()
+      // window.location.reload()
     }
   }
   const handleInputChange = (e) => emailPhone.set(e.target.value)
@@ -209,7 +215,9 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
   }
 
   const handleOAuthServiceClick = (e) => {
-    AuthService.loginUserByOAuth(e.currentTarget.id, location)
+    if (!localStorage.getItem('keycloakUser')) {
+      AuthService.loginUserByOAuth(e.currentTarget.id, location)
+    }
   }
 
   const handleRemoveOAuthServiceClick = (e) => {
@@ -221,9 +229,13 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
     if (onClose) onClose()
     showUserId.set(false)
     showApiKey.set(false)
+    await AuthService.KeycloaklogoutUser()
     await AuthService.logoutUser()
     // window.location.reload()
     oauthConnectedState.set(Object.assign({}, initialOAuthConnectedState))
+    setTimeout(() => {
+      window.location.reload()
+    }, 2000)
   }
 
   /**
@@ -350,43 +362,62 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
     authState?.value?.github ||
     authState?.value?.google ||
     authState?.value?.linkedin ||
-    authState?.value?.twitter
+    authState?.value?.twitter ||
+    authState?.value?.keycloak
 
   const enableConnect = authState?.value?.emailMagicLink || authState?.value?.smsMagicLink
 
   return (
-    <Menu open isPopover={isPopover} onClose={() => PopupMenuServices.showPopupMenu()}>
+    <Menu
+      open
+      isPopover={isPopover}
+      onClose={() => {
+        if (localStorage.getItem('keycloakUser') === 'true') {
+          PopupMenuServices.showPopupMenu()
+        }
+      }}
+    >
       <Box className={styles.menuContent}>
         <Box className={styles.profileContainer}>
-          <Avatar
-            imageSrc={avatarThumbnail}
-            showChangeButton={!!engineInitialized.value}
-            onChange={() => PopupMenuServices.showPopupMenu(UserMenus.AvatarSelect)}
-          />
+          {localStorage.getItem('keycloakUser') === 'true' ? (
+            <Avatar
+              imageSrc={avatarThumbnail}
+              showChangeButton={!!engineInitialized.value}
+              onChange={() => PopupMenuServices.showPopupMenu(UserMenus.AvatarSelect)}
+            />
+          ) : (
+            <Avatar
+              imageSrc={avatarThumbnail}
+              // showChangeButton={!!engineInitialized.value}
+              onChange={() => PopupMenuServices.showPopupMenu(UserMenus.AvatarSelect)}
+            />
+          )}
 
           <Box className={styles.profileDetails}>
             <Text variant="body2">
-              {hasAdminAccess ? t('user:usermenu.profile.youAreAn') : t('user:usermenu.profile.youAreA')}
-              <span className={commonStyles.bold}>{hasAdminAccess ? ' Admin' : isGuest ? ' Guest' : ' User'}</span>.
+              <span className={commonStyles.bold}>
+                {isGuest ? t('user:usermenu.profile.youAreAGuest') : t('user:usermenu.profile.youAreAUser')}
+              </span>
+              .
             </Text>
 
-            {selfUser?.inviteCode.value && (
+            {/* {selfUser?.inviteCode.value && (
               <Text mt={1} variant="body2">
                 {t('user:usermenu.profile.inviteCode')}: {selfUser.inviteCode.value}
               </Text>
-            )}
+            )} */}
 
-            <Text id="show-user-id" mt={1} variant="body2" onClick={() => showUserId.set(!showUserId.value)}>
+            {/* <Text id="show-user-id" mt={1} variant="body2" onClick={() => showUserId.set(!showUserId.value)}>
               {showUserId.value ? t('user:usermenu.profile.hideUserId') : t('user:usermenu.profile.showUserId')}
-            </Text>
+            </Text> */}
 
-            {selfUser?.apiKey?.id && (
+            {/* {selfUser?.apiKey?.id && (
               <Text variant="body2" mt={1} onClick={() => showApiKey.set(!showApiKey.value)}>
                 {showApiKey.value ? t('user:usermenu.profile.hideApiKey') : t('user:usermenu.profile.showApiKey')}
               </Text>
-            )}
+            )} */}
 
-            {!isGuest && (
+            {localStorage.getItem('keycloakUser') && (
               <Text variant="body2" mt={1} onClick={handleLogout}>
                 {t('user:usermenu.profile.logout')}
               </Text>
@@ -418,11 +449,14 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
           name="username"
           label={t('user:usermenu.profile.lbl-username')}
           value={username.value || ''}
+          readOnly={true}
           error={errorUsername.value}
           sx={{ mt: 4 }}
-          endIcon={<Icon type="Check" />}
+          // endIcon={<Icon type="Check" />}
           onEndIconClick={updateUserName}
           onChange={handleUsernameChange}
+          className="noOpacity"
+          disabled
           onKeyDown={(e) => {
             if (e.key === 'Enter') updateUserName(e)
           }}
@@ -466,7 +500,7 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
           <>
             {isGuest && enableConnect && (
               <>
-                <InputText
+                {/* <InputText
                   label={getConnectText()}
                   value={apiKey}
                   placeholder={getConnectPlaceholder()}
@@ -479,7 +513,7 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleGuestSubmit(e)
                   }}
-                />
+                /> */}
 
                 {loading.value && (
                   <Box display="flex" justifyContent="center">
@@ -489,7 +523,7 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
               </>
             )}
 
-            {isGuest && enableWalletLogin && (
+            {/* {isGuest && enableWalletLogin && (
               <>
                 <Text align="center" variant="body2" mb={1} mt={2}>
                   {t('user:usermenu.profile.or')}
@@ -513,18 +547,19 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
                   </Box>
                 )}
               </>
-            )}
+            )} */}
 
             {enableSocial && (
               <>
                 {selfUser?.isGuest.value && (
                   <Text align="center" variant="body2" mb={1} mt={2}>
-                    {t('user:usermenu.profile.addSocial')}
+                    {/* {t('user:usermenu.profile.addSocial')} */}
+                    {t('user:usermenu.profile.fanAppTokenId')}
                   </Text>
                 )}
 
                 <div className={styles.socialContainer}>
-                  {authState?.value?.discord && !oauthConnectedState.discord.value && (
+                  {/* {authState?.value?.discord && !oauthConnectedState.discord.value && (
                     <IconButton
                       id="discord"
                       icon={<DiscordIcon viewBox="0 0 40 40" />}
@@ -561,17 +596,36 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
                   )}
                   {authState?.value?.github && !oauthConnectedState.github.value && (
                     <IconButton id="github" icon={<Icon type="GitHub" />} onClick={handleOAuthServiceClick} />
+                  )} */}
+                  {authState?.value?.keycloak && !oauthConnectedState.keycloak.value && (
+                    // <IconButton id="keycloak" icon={<KeycloakIcon />} onClick={handleOAuthServiceClick} />
+                    <div className="pdl-login-btn">
+                      <button onClick={handleOAuthServiceClick} id="keycloak">
+                        <img src={KeycloakIcon} width={'80px'} />
+                      </button>
+                    </div>
                   )}
                 </div>
+
+                {!localStorage.getItem('keycloakUser') && (
+                  <div className="termsAndConditions">
+                    <p>{t('user:usermenu.profile.termsNConditions')}</p>
+                    <a href={''} target="_blank">
+                      
+                    </a>
+                    <p></p>
+                  </div>
+                )}
 
                 {!selfUser?.isGuest.value && removeSocial && (
                   <>
                     <Text align="center" variant="body2" mb={1} mt={2}>
-                      {t('user:usermenu.profile.removeSocial')}
+                      {/* {t('user:usermenu.profile.removeSocial')} */}
+                      {t('user:usermenu.profile.loggedInFanAppTokenId')}
                     </Text>
 
                     <div className={styles.socialContainer}>
-                      {authState?.discord.value && oauthConnectedState.discord.value && (
+                      {/* {authState?.discord.value && oauthConnectedState.discord.value && (
                         <IconButton
                           id="discord"
                           icon={<DiscordIcon viewBox="0 0 40 40" />}
@@ -608,6 +662,14 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
                       )}
                       {authState?.github.value && oauthConnectedState.github.value && (
                         <IconButton id="github" icon={<Icon type="GitHub" />} onClick={handleRemoveOAuthServiceClick} />
+                      )} */}
+                      {authState?.keycloak.value && oauthConnectedState.keycloak.value && (
+                        // <IconButton id="keycloak" icon={<KeycloakIcon />} onClick={handleRemoveOAuthServiceClick} />
+                        <div className="pdl-login-btn">
+                          <button disabled={true} id="keycloak">
+                            <img src={KeycloakIcon} width={'80px'} />
+                          </button>
+                        </div>
                       )}
                     </div>
                   </>
@@ -615,11 +677,11 @@ const ProfileMenu = ({ hideLogin, onClose, isPopover }: Props): JSX.Element => {
               </>
             )}
 
-            {!isGuest && (
+            {/* {!isGuest && (
               <Text id="delete-account" mb={1} variant="body2" onClick={() => showDeleteAccount.set(true)}>
                 {t('user:usermenu.profile.delete.deleteAccount')}
               </Text>
-            )}
+            )} */}
 
             {showDeleteAccount.value && (
               <ConfirmDialog

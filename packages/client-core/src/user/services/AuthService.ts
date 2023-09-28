@@ -24,6 +24,7 @@ Ethereal Engine. All Rights Reserved.
 */
 
 import { Paginated } from '@feathersjs/feathers'
+import axios from 'axios'
 import i18n from 'i18next'
 import { useEffect } from 'react'
 import { v1 } from 'uuid'
@@ -554,12 +555,33 @@ export const AuthService = {
     try {
       await API.instance.client.logout()
       dispatchAction(AuthAction.didLogoutAction({}))
+      localStorage.removeItem('pdl_access_token')
+      localStorage.removeItem('pdl_username_updated')
     } catch (_) {
       dispatchAction(AuthAction.didLogoutAction({}))
     } finally {
       dispatchAction(AuthAction.actionProcessing({ processing: false }))
       AuthService.doLoginAuto(true)
     }
+    localStorage.clear()
+    const url = window.location.href
+    const urlWithoutQueryString = url.split('?')[0]
+    window.location.href = urlWithoutQueryString
+  },
+
+  async KeycloaklogoutUser() {
+
+    }
+
+    await axios(config)
+      .then(async function (response) {
+        console.log('Logout From PDL', response.data)
+        localStorage.removeItem('pdl_refresh_token')
+        localStorage.removeItem('username')
+      })
+      .catch(function (error) {
+        console.log('Error fetching the personal info from PDL', error)
+      })
   },
 
   async registerUserByEmail(form: EmailRegistrationForm) {
@@ -734,7 +756,7 @@ export const AuthService = {
   },
 
   async addConnectionByOauth(
-    oauth: 'facebook' | 'google' | 'github' | 'linkedin' | 'twitter' | 'discord',
+    oauth: 'facebook' | 'google' | 'github' | 'linkedin' | 'twitter' | 'discord' | 'keycloak',
     userId: string
   ) {
     window.open(`https://${config.client.serverHost}/auth/oauth/${oauth}?userId=${userId}`, '_blank')

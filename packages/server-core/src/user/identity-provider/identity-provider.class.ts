@@ -152,6 +152,12 @@ export class IdentityProvider<T = IdentityProviderInterface> extends Service<T> 
         break
       case 'auth0':
         break
+      case 'keycloak':
+        identityProvider = {
+          token: token,
+          type
+        }
+        break
     }
 
     // if userId is not defined, then generate userId
@@ -212,6 +218,10 @@ export class IdentityProvider<T = IdentityProviderInterface> extends Service<T> 
       }
     }
 
+    const without = avatars.data.filter(
+      (avatar) => avatar.name !== '' && avatar.name !== '' && avatar.name !== ''
+    )
+
     let result
     try {
       result = await super.create(
@@ -222,7 +232,7 @@ export class IdentityProvider<T = IdentityProviderInterface> extends Service<T> 
             id: userId,
             isGuest,
             inviteCode: type === 'guest' ? null : code,
-            avatarId: avatars.data[random(avatars.data.length - 1)].id
+            avatarId: without[random(without.length - 1)].id
           }
         },
         params

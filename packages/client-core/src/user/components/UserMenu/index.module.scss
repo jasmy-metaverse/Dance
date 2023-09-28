@@ -1,4 +1,4 @@
-@import "@etherealengine/client-core/src/styles/imports.module.scss";
+@import '@etherealengine/client-core/src/styles/imports.module.scss';
 
 .menuContent {
   min-height: 220px;
@@ -115,5 +115,11 @@
       margin-right: 5px;
       min-width: auto;
     }
+  }
+}
+
+.noOpacity {
+  .MuiInputBase-adornedEnd {
+    opacity: 1;
   }
 }

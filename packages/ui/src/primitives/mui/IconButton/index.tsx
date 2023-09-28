@@ -48,12 +48,14 @@ const IconButton = ({
   title,
   type, // 'default' | 'glow' | 'gradient' | 'solid'
   onClick,
+  classId,
   ...props
 }: IconButtonProps & {
   background?: string
   icon?: React.ReactNode
   sizePx?: number
   type?: any
+  classId?: any
 }) => {
   let baseStyle = styles.iconButton
 
@@ -68,7 +70,7 @@ const IconButton = ({
   return (
     <MUIIconButton
       id={id}
-      className={`${baseStyle} ${background ? styles.backgroundStyle : ''} ${className ?? ''}`}
+      className={`${classId} ${baseStyle} ${background ? styles.backgroundStyle : ''} ${className ?? ''}`}
       disabled={disabled}
       disableRipple={disableRipple}
       size={size}

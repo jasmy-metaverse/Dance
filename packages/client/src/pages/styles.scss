@@ -1,12 +1,12 @@
-@import "@etherealengine/client-core/src/styles/imports.module.scss";
+@import '@etherealengine/client-core/src/styles/imports.module.scss';
 
 .credential-mediator {
   pointer-events: auto;
 }
 
 :root {
-  --lato: "Lato", sans-serif;
-  --zilla: "Zilla Slab", sans-serif;
+  --lato: 'Lato', sans-serif;
+  --zilla: 'Zilla Slab', sans-serif;
   --red: #f44336;
   --pink: #e91e63;
   --purple: #9c27b0;
@@ -46,7 +46,7 @@
   --background2: #15171b;
 }
 
-:root[data-theme="light"] {
+:root[data-theme='light'] {
   --textColor: #585858;
   --navbarBackground: #e7e7e7;
   --sidebarBackground: #e1e1e1;
@@ -88,7 +88,7 @@
   --dockBackground: #bdbdbda6;
 }
 
-:root[data-theme="dark"] {
+:root[data-theme='dark'] {
   --textColor: #fff;
   --navbarBackground: rgb(78 78 78 / 100%);
   --sidebarBackground: rgb(80 80 80 / 100%);
@@ -130,7 +130,7 @@
   --dockBackground: rgb(53 53 53 / 93%);
 }
 
-:root[data-theme="vaporwave"] {
+:root[data-theme='vaporwave'] {
   --textColor: #fff;
   --navbarBackground: rgb(31 27 72 / 85%);
   --sidebarBackground: rgb(31 27 72 / 100%);
@@ -457,15 +457,15 @@ body {
   }
 }
 
-[class*="MuiModal-root"] {
+[class*='MuiModal-root'] {
   pointer-events: all;
 }
 
-[class*="MuiMenu-root"] {
+[class*='MuiMenu-root'] {
   pointer-events: all;
 }
 
-[class*="MuiPopper-root"] {
+[class*='MuiPopper-root'] {
   pointer-events: all;
 }
 
@@ -487,4 +487,44 @@ vite-error-overlay {
   #engine-container {
     height: 100%;
   }
+}
+
+.noOpacity {
+  div {
+    opacity: 1 !important;
+  }
+}
+
+.termsAndConditions {
+  text-align: center;
+  margin-top: 20px;
+  padding: 5px;
+
+  a {
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+  }
+}
+
+.pdl-login-btn {
+  button {
+    border: none;
+    border-radius: 50%;
+  }
+
+  img {
+    border-radius: 50%;
+    box-shadow: 0 0 2px 7px #a0a0a0;
+    transition: all 0.5s ease-in-out;
+  }
+
+  img:hover {
+    border-radius: 50%;
+    box-shadow: 0 0 2px 7px #797979;
+  }
+}
+
+#keycloak {
+  cursor: pointer;
 }

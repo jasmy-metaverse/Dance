@@ -280,7 +280,8 @@ const execute = () => {
 
     if (isDev) {
       if (buttons.KeyO?.down) onKeyO()
-      if (buttons.KeyP?.down) onKeyP()
+      //To enable or disable Polygon view
+      // if (buttons.KeyP?.down) onKeyP()
     }
 
     if (!hasMovementControls()) return

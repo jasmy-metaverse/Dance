@@ -57,12 +57,12 @@ const EmoteDetailView = () => {
   let effectiveRadius = menuRadius - menuItemRadius - menuPadding / 2
 
   let [items, setItems] = useState([
-    {
-      body: <img src="/static/grinning.svg" alt="Dance 4" />,
-      containerProps: {
-        onClick: () => runAnimation(AvatarStates.DANCE4)
-      }
-    },
+    // {
+    //   body: <img src="/static/grinning.svg" alt="Dance 4" />,
+    //   containerProps: {
+    //     onClick: () => runAnimation(AvatarStates.DANCE4)
+    //   }
+    // },
     {
       body: <img src="/static/sad.svg" alt="sad" />,
       containerProps: {

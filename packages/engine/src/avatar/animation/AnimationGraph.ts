@@ -24,6 +24,14 @@ Ethereal Engine. All Rights Reserved.
 */
 
 /** Animation graph for entity. */
+import { Mesh } from 'three'
+
+import { EditorControlFunctions } from '@etherealengine/editor/src/functions/EditorControlFunctions'
+
+import { AssetLoader } from '../../assets/classes/AssetLoader'
+import { Engine } from '../../ecs/classes/Engine'
+import { getComponent } from '../../ecs/functions/ComponentFunctions'
+import { AvatarComponent } from '../components/AvatarComponent'
 import { AnimationState, enterAnimationState, updateAnimationState } from './AnimationState'
 import { AnimationStateTransitionRule } from './AnimationStateTransitionsRule'
 
@@ -54,6 +62,24 @@ export function changeState(graph: AnimationGraph, name: string): void {
   const newState = graph.states[name]
   if ((graph.currentState && graph.currentState.name === name) || !newState) return
   const prevState = graph.currentState
+
+  const anims = ['LAUGH', 'CRY', 'DEFEAT', 'CLAP', 'WAVE']
+  if (anims.includes(prevState.name)) {
+    const entity = Engine.instance.localClientEntity
+    const avatar = getComponent(entity, AvatarComponent)
+    const hier = avatar.model?.children[0].children[0].children[0].children.find((child) => child.name === 'head')
+    if (hier !== undefined) {
+      const id = hier?.uuid
+      const mesh = hier as Mesh
+      const changeToDefault = async () => {
+        const prop = await AssetLoader.loadAsync(
+          `${process.env.VITE_FILE_SERVER}/projects/default-project/assets/SGT_diffse_2.png`
+        )
+        EditorControlFunctions.modifyMaterial([id], mesh.material.uuid, [{ ['map']: prop }])
+      }
+      changeToDefault()
+    }
+  }
   graph.currentState = newState
   enterAnimationState(graph.currentState, prevState)
   if (graph.stateChanged) graph.stateChanged(name, graph)

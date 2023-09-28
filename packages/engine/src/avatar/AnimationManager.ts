@@ -48,7 +48,7 @@ export class AnimationManager {
   }
 
   async loadDefaultAnimations(
-    path: string = `${config.client.fileServer}/projects/default-project/assets/Animations.glb`
+    path: string = `${config.client.fileServer}/projects/default-project/assets/Animations3.glb`
   ) {
     if (this._animations) {
       return this._animations

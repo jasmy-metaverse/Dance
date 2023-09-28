@@ -165,7 +165,18 @@ export const usePortalTeleport = () => {
       }
 
       if (activePortal.redirect) {
-        window.location.href = engineState.publicPath.value + '/location/' + activePortal.location
+        // window.location.href = engineState.publicPath.value + '/location/' + activePortal.location
+
+        // window.location.href = engineState.publicPath.value + '/location/' + activePortal.location
+        if (activePortal.location === 'football')
+          window.location.href = `${process.env.VITE_PORTAL_FOOTBALL_LOCATION}?code=${localStorage.getItem(
+            'userCode'
+          )}&&username=${localStorage.getItem('username')}&&avatarname=${localStorage.getItem('AvatarName')}`
+        else if (activePortal.location === 'shrine')
+          window.location.href = `${process.env.VITE_PORTAL_SHRINE_LOCATION}?code=${localStorage.getItem(
+            'userCode'
+          )}&&username=${localStorage.getItem('username')}&&avatarname=${localStorage.getItem('AvatarName')}`
+
         return
       }
 

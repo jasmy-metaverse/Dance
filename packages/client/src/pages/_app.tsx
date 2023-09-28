@@ -24,8 +24,11 @@ Ethereal Engine. All Rights Reserved.
 */
 
 // import * as chapiWalletPolyfill from 'credential-handler-polyfill'
+
+import CryptoJS from 'crypto-js'
 import { SnackbarProvider } from 'notistack'
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 
 import { AdminCoilSettingService } from '@etherealengine/client-core/src/admin/services/Setting/CoilSettingService'
 import { initGA, logPageView } from '@etherealengine/client-core/src/common/analytics'
@@ -38,7 +41,8 @@ import { ProjectService, ProjectState } from '@etherealengine/client-core/src/co
 import Debug from '@etherealengine/client-core/src/components/Debug'
 import InviteToast from '@etherealengine/client-core/src/components/InviteToast'
 import { theme } from '@etherealengine/client-core/src/theme'
-import { AuthState } from '@etherealengine/client-core/src/user/services/AuthService'
+import { AuthService, AuthState } from '@etherealengine/client-core/src/user/services/AuthService'
+import { AvatarService } from '@etherealengine/client-core/src/user/services/AvatarService'
 import GlobalStyle from '@etherealengine/client-core/src/util/GlobalStyle'
 import { AudioEffectPlayer } from '@etherealengine/engine/src/audio/systems/MediaSystem'
 import { matches } from '@etherealengine/engine/src/common/functions/MatchesUtils'
@@ -64,7 +68,7 @@ const AppPage = ({ route }: { route: string }) => {
   const [projectComponents, setProjectComponents] = useState<Array<any>>([])
   const [fetchedProjectComponents, setFetchedProjectComponents] = useState(false)
   const projectState = useHookstate(getMutableState(ProjectState))
-
+  const { search } = useLocation()
   const initApp = useCallback(() => {
     initGA()
     logPageView()
@@ -89,14 +93,6 @@ const AppPage = ({ route }: { route: string }) => {
   }, [])
 
   useEffect(initApp, [])
-
-  // useEffect(() => {
-  //   chapiWalletPolyfill
-  //     .loadOnce()
-  //     .then(() => console.log('CHAPI wallet polyfill loaded.'))
-  //     .catch((e) => console.error('Error loading polyfill:', e))
-  // }, [])
-
   useEffect(() => {
     if (selfUser?.id.value && projectState.updateNeeded.value) {
       ProjectService.fetchProjects()
@@ -121,6 +117,110 @@ const AppPage = ({ route }: { route: string }) => {
   useEffect(() => {
     authState.isLoggedIn.value && AdminCoilSettingService.fetchCoil()
   }, [authState.isLoggedIn])
+
+  const privateKey = 'abc'
+  const [count, setCount] = React.useState(0)
+  const updatePDLUserName = () => {
+    const userName = localStorage.getItem('username')
+    const signer = CryptoJS.HmacSHA256(userName, privateKey).toString()
+    localStorage.setItem('userCode', signer)
+  }
+
+  if (localStorage.getItem('keycloakUser')) updatePDLUserName()
+  const getRandomNumber: any = () => Math.floor(Math.random() * (1000 - 0) + 0)
+  const handleCodeVerify = () => {
+    const query = window.location.search.substring(1)
+    const params = new URLSearchParams(query)
+    const code = params.get('code')
+    const username = params.get('username') || ''
+    const avatarname = params.get('avatarname') || ''
+    if (!search?.includes('logout')) {
+      if (
+        avatarname === 'male' ||
+        avatarname === 'female' ||
+      ) {
+        const signer = CryptoJS.HmacSHA256(username, privateKey).toString()
+        if (signer === code) {
+          AuthService.updateUsername(Engine.instance.userId, username)
+          authState.user.isGuest.set(false)
+          localStorage.setItem('keycloakUser', 'true')
+          localStorage.setItem('usercode', 'true')
+          localStorage.setItem('username', username)
+          localStorage.setItem('userCode', signer)
+          localStorage.setItem('avatarname', avatarname)
+        } else {
+          localStorage.clear()
+        }
+      } else {
+        window.location.href = '/'
+        localStorage.clear()
+      }
+    } else {
+      localStorage.clear()
+      AuthService.updateUsername(Engine.instance.userId, `Guest #${getRandomNumber()}`)
+    }
+  }
+
+  useEffect(() => {
+    const UrlVerifyParams = search?.includes('?code' && 'username' && 'avatarname')
+
+    if (UrlVerifyParams && count === 0 && Engine.instance.userId) {
+      setCount(1)
+      handleCodeVerify()
+    }
+  }, [Engine.instance.userId])
+  let socket
+  let socketInterval
+  const [socketConnectionState, setSocketConnectionState] = React.useState(false)
+
+  useEffect(() => {
+    if (!socketConnectionState) {
+      try {
+        socketConnection()
+      } catch {
+        console.log('Socket connection failed')
+      }
+    }
+
+    return () => clearInterval(socketInterval)
+  }, [socketConnectionState])
+
+  const socketConnection = () => {
+    socket = new WebSocket(`wss://${window.location.host}`)
+
+    socket.onopen = function () {
+      console.log('socket open')
+      socket.send('Ping Open')
+    }
+
+    socket.onmessage = function (event) {
+      console.log(`[message] Data received from server: ${event.data}`)
+      console.log('socket onmessage', event.data)
+      socket.send('Ping from dancing')
+    }
+
+    socket.onclose = function (event) {
+      setSocketConnectionState(false)
+      clearInterval(socketInterval)
+      if (event.wasClean) {
+        socketConnection()
+        console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`)
+      } else {
+        // e.g. server process killed or network down
+        // event.code is usually 1006 in this case
+        console.log('[close] Connection died')
+      }
+    }
+
+    socket.onerror = function (error) {
+      setSocketConnectionState(false)
+      clearInterval(socketInterval)
+      console.log(`[error]`, error)
+      setTimeout(() => {
+        socketConnection()
+      }, 2000)
+    }
+  }
 
   return (
     <>
